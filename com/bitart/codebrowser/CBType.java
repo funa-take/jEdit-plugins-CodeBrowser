@@ -16,7 +16,7 @@
 *	CBType is a TreeNode object representing a certain category (such as
 *	functions, variables etc) of the ctags results.
 *
-*	$Id: CBType.java 1655 2005-10-21 17:12:23Z ezust $
+*	$Id: CBType.java,v 1.1.1.1 2005/10/21 17:12:24 ezust Exp $
 *
 *******************************************************************************
 *

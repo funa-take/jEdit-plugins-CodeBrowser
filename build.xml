@@ -2,7 +2,7 @@
 
 	<property name="user-doc.xml" location = "${basedir}/users-guide.xml"/>
 
-	<property file="../build.properties"/>
+	<property file="build.properties"/>
 	<import file="${build.support}/plugin-build.xml" />
 	    
 	<property name="javadoc.packagenames"	value="com.bitart.codebrowser.*" />
