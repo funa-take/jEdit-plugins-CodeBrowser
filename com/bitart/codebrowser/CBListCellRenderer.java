@@ -22,7 +22,7 @@
 *		  has unsaved changes
 *		- A bold font is used if the buffer is selected 
 *
-*	$Id: CBListCellRenderer.java 1655 2005-10-21 17:12:23Z ezust $
+*	$Id: CBListCellRenderer.java,v 1.1.1.1 2005/10/21 17:12:24 ezust Exp $
 *
 *******************************************************************************
 *

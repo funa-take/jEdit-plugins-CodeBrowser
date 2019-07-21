@@ -21,7 +21,7 @@
 *	pattern element is massaged into a tooltip text, and also escaped in
 *	such a way that it is suitable for jEdits search engine.
 *
-*	$Id: CBLeaf.java 1669 2006-07-09 03:27:59Z  $
+*	$Id: CBLeaf.java,v 1.2 2006/06/20 21:24:56 kpouer Exp $
 *
 *******************************************************************************
 *

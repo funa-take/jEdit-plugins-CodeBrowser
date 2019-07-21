@@ -9,7 +9,7 @@
  *  A CBRoot object is identified by its path and its edit mode
  *  As it is usually a small list, sequential search is sufficient
  *
- *	$Id: ParserHistory.java 1655 2005-10-21 17:12:23Z ezust $
+ *	$Id: ParserHistory.java,v 1.1.1.1 2005/10/21 17:12:24 ezust Exp $
  */
 package com.bitart.codebrowser;
 

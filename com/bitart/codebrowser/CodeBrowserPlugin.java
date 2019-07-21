@@ -16,7 +16,7 @@
 *	Description:
 *	Simple jEdit plugin class.
 *
-*	$Id: CodeBrowserPlugin.java 1669 2006-07-09 03:27:59Z  $
+*	$Id: CodeBrowserPlugin.java,v 1.2 2006/07/09 03:27:59 ezust Exp $
 *
 *******************************************************************************
 *

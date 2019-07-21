@@ -1,74 +1,75 @@
 /******************************************************************************
-*	Copyright 2002 BITart Gerd Knops. All rights reserved.
-*
-*	Project	: CodeBrowser
-*	File	: CBRoot.java
-*	Author	: Gerd Knops gerti@BITart.com
-*
-*******************************************************************************
-*                                    :mode=java:folding=indent:collapseFolds=1:
-*	History:
-*	020510 Creation of file
-*
-*******************************************************************************
-*
-*	Description:
-*	This is the root TreeNode for the CodeBrowser display.
-*	Here we take care of having the file parsed via ctags, and then
-*	we create child nodes as required.
-*
-*	$Id: CBRoot.java 1655 2005-10-21 17:12:23Z ezust $
-*
-*******************************************************************************
-*
-* DISCLAIMER
-*
-* BITart and Gerd Knops make no warranties, representations or commitments
-* with regard to the contents of this software. BITart and Gerd Knops
-* specifically disclaim any and all warranties, wether express, implied or
-* statutory, including, but not limited to, any warranty of merchantability
-* or fitness for a particular purpose, and non-infringement. Under no
-* circumstances will BITart or Gerd Knops be liable for loss of data,
-* special, incidental or consequential damages out of the use of this
-* software, even if those damages were forseeable, or BITart or Gerd Knops
-* was informed of their potential.
-*
-******************************************************************************/
+ *	Copyright 2002 BITart Gerd Knops. All rights reserved.
+ *
+ *	Project	: CodeBrowser
+ *	File	: CBRoot.java
+ *	Author	: Gerd Knops gerti@BITart.com
+ *
+ *******************************************************************************
+ *                                    :mode=java:folding=indent:collapseFolds=1:
+ *	History:
+ *	020510 Creation of file
+ *
+ *******************************************************************************
+ *
+ *	Description:
+ *	This is the root TreeNode for the CodeBrowser display.
+ *	Here we take care of having the file parsed via ctags, and then
+ *	we create child nodes as required.
+ *
+ *	$Id: CBRoot.java,v 1.1.1.1 2005/10/21 17:12:24 ezust Exp $
+ *
+ *******************************************************************************
+ *
+ * DISCLAIMER
+ *
+ * BITart and Gerd Knops make no warranties, representations or commitments
+ * with regard to the contents of this software. BITart and Gerd Knops
+ * specifically disclaim any and all warranties, wether express, implied or
+ * statutory, including, but not limited to, any warranty of merchantability
+ * or fitness for a particular purpose, and non-infringement. Under no
+ * circumstances will BITart or Gerd Knops be liable for loss of data,
+ * special, incidental or consequential damages out of the use of this
+ * software, even if those damages were forseeable, or BITart or Gerd Knops
+ * was informed of their potential.
+ *
+ ******************************************************************************/
 package com.bitart.codebrowser;
 /******************************************************************************
-* Imports
-******************************************************************************/
+ * Imports
+ ******************************************************************************/
 
-	import java.util.*;
-	import java.io.*;
-	import javax.swing.*;
-	import javax.swing.tree.*;
-	
-	import org.gjt.sp.jedit.*;
-	
+import java.util.*;
+import java.io.*;
+import java.util.regex.*;
+import javax.swing.*;
+import javax.swing.tree.*;
+
+import org.gjt.sp.jedit.*;
+
 /*****************************************************************************/
 public class CBRoot implements TreeNode
 {
-/******************************************************************************
-* Vars
-******************************************************************************/
-
+  /******************************************************************************
+   * Vars
+   ******************************************************************************/
+  
 	static final boolean DEBUG=false;
 	
 	Vector	children=null;
 	
-/******************************************************************************
-* Factory methods
-******************************************************************************/
-public CBRoot(String path,String lang)
+	/******************************************************************************
+	 * Factory methods
+	 ******************************************************************************/
+	public CBRoot(String path, String fileName, String lang, String encoding)
 	{
-		parse(path,lang);
+		parse(path, fileName, lang, encoding);
 	}
-
-/******************************************************************************
-* Implementation
-******************************************************************************/
-public void parse(String path,String lang)
+	
+	/******************************************************************************
+	 * Implementation
+	 ******************************************************************************/
+	public void parse(String path, String fileName, String lang, String encoding)
 	{
 		if(DEBUG) System.err.println("Parsing "+path);
 		children=new Vector();
@@ -83,6 +84,36 @@ public void parse(String path,String lang)
 		try
 		{
 			//System.err.println("Starting ctags...");
+      // funa edit
+      String upperEncoding = encoding.toUpperCase();
+      String ctagsEncoding = "";
+      if (!jEdit.getBooleanProperty("options.codebrowser.use_jcode", true)){
+        ctagsEncoding = "";
+      } else if (upperEncoding.indexOf("UTF-8") >= 0){
+        ctagsEncoding = "utf8";
+      } else if (
+        upperEncoding.indexOf("MS932") >= 0 
+        || upperEncoding.indexOf("SJIS") >= 0
+        || upperEncoding.indexOf("SHIFT_JIS") >= 0
+        || upperEncoding.indexOf("WINDOWS-31J") >= 0)
+      {
+        ctagsEncoding = "sjis";
+      } else if (upperEncoding.indexOf("EUC") >= 0){
+        ctagsEncoding = "euc";
+      } else {
+        ctagsEncoding = "";
+      }
+      
+      if (upperEncoding.indexOf("NATIVE2ASCII") == 0){
+        encoding = "ISO-8859-1";
+      }
+      
+      // System.out.println(encoding);
+      // System.out.println(upperEncoding);
+      // System.out.println(ctagsEncoding);
+      
+      String ctagsLang = getCtagsLang(lang, fileName);
+      
 			String[] args;
 			
 			if(!buildxml)
@@ -111,15 +142,32 @@ public void parse(String path,String lang)
 				};
 				lang="ant";
 			}
+      // funa edit
+      if (!ctagsEncoding.equals("")){
+        String[] newArgs = new String[args.length + 1];
+        System.arraycopy(args, 0, newArgs,0, 1);
+        newArgs[1] = "--jcode="+ctagsEncoding;
+        System.arraycopy(args, 1, newArgs,2, args.length - 1);
+        args = newArgs;
+      }
+      
+      if (!ctagsLang.equals("")){
+        String[] newArgs = new String[args.length + 1];
+        System.arraycopy(args, 0, newArgs,0, 1);
+        newArgs[1] = "--language-force="+ctagsLang;
+        System.arraycopy(args, 1, newArgs,2, args.length - 1);
+        args = newArgs;
+      }
+      
 			/*
 			System.err.println("Args: ");
 			for(int i=0;i<args.length;i++)
 			{
-				System.err.println("\t"+args[i]);
+			System.err.println("\t"+args[i]);
 			}
 			*/
 			Process p=Runtime.getRuntime().exec(args);
-			BufferedReader in=new BufferedReader(new InputStreamReader(p.getInputStream()));
+			BufferedReader in=new BufferedReader(new InputStreamReader(p.getInputStream(), encoding));
 			//System.err.println("ctags started!");
 			
 			String line;
@@ -196,19 +244,41 @@ public void parse(String path,String lang)
 		}
 	}
 	
-public Vector split(String where,String str)
+	private String getCtagsLang(String mode, String fileName) {
+	  Vector<Vector<String>> mapping = CodeBrowserOptionPane.getMapping();
+	  
+	  for(int i = 0; i < mapping.size(); i++) {
+	    String mappingMode = mapping.get(i).get(CodeBrowserOptionPane.MappingModel.COL.MODE.ordinal());
+	    String mappingRegex = mapping.get(i).get(CodeBrowserOptionPane.MappingModel.COL.FILE_REGEX.ordinal());
+	    String mappingLang = mapping.get(i).get(CodeBrowserOptionPane.MappingModel.COL.LANG.ordinal());
+	    
+	    if (!"".equals(mappingMode) && !mappingMode.toLowerCase().equals(mode.toLowerCase())) {
+	      continue;
+	    }
+	    
+	    if (!"".equals(mappingRegex) && !Pattern.matches(mappingRegex, fileName)) {
+	      continue;
+	    }
+	    
+	    return mappingLang;
+	  }
+	  
+	  return "";
+	}
+	
+	public Vector split(String where,String str)
 	/***********************************************************************
-	* Splits the String txt on occurances of str, returns a Vector
-	* of Strings.
-	* @param where The String to split on.
-	* @param str The String to split.
-	* @return A Vector of strings.
-	***********************************************************************/
+	 * Splits the String txt on occurances of str, returns a Vector
+	 * of Strings.
+	 * @param where The String to split on.
+	 * @param str The String to split.
+	 * @return A Vector of strings.
+	 ***********************************************************************/
 	{
  		Vector v=new Vector();
 		
 		int idx;
-
+		
 		while((idx=str.indexOf(where))>=0)
 		{
 			String s="";
@@ -217,11 +287,11 @@ public Vector split(String where,String str)
 			str=str.substring(idx+where.length());
 		}
 		v.addElement(str);
-
+		
 		return v;
 	}
 	
-public void expandPaths(JTree tree)
+	public void expandPaths(JTree tree)
 	{
 		Object[] objs={
 			this,
@@ -238,7 +308,7 @@ public void expandPaths(JTree tree)
 		}
 	}
 	
-public void setSorted(boolean flag,JTree tree)
+	public void setSorted(boolean flag,JTree tree)
 	{
 		DefaultTreeModel tm=null;
 		if(tree!=null) tm=(DefaultTreeModel)tree.getModel();
@@ -261,40 +331,40 @@ public void setSorted(boolean flag,JTree tree)
 		}
 	}
 	
-/******************************************************************************
-* TreeNode interface
-******************************************************************************/
-public Enumeration children()
+	/******************************************************************************
+	 * TreeNode interface
+	 ******************************************************************************/
+	public Enumeration children()
 	{
 		return children.elements();
 	}
 	
-public boolean getAllowsChildren()
+	public boolean getAllowsChildren()
 	{
 		return true;
 	}
 	
-public TreeNode getChildAt(int index)
+	public TreeNode getChildAt(int index)
 	{
 		return (TreeNode)children.elementAt(index);
 	}
 	
-public int getChildCount()
+	public int getChildCount()
 	{
 		return children.size();
 	}
 	
-public int getIndex(TreeNode child)
+	public int getIndex(TreeNode child)
 	{
 		return children.indexOf(child);
 	}
 	
-public TreeNode getParent()
+	public TreeNode getParent()
 	{
 		return null;
 	}
 	
-public boolean isLeaf()
+	public boolean isLeaf()
 	{
 		return false;
 	}
