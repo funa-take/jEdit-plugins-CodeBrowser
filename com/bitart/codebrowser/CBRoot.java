@@ -85,30 +85,27 @@ public class CBRoot implements TreeNode
 		{
 			//System.err.println("Starting ctags...");
       // funa edit
+      String ctagsExe = jEdit.getProperty("options.codebrowser.ctags_path");
+      List<String> cmdLine = new ArrayList<String>();
+      
+      cmdLine.add(ctagsExe);
+      
       String upperEncoding = encoding.toUpperCase();
-      String ctagsEncoding = "";
-      if (!jEdit.getBooleanProperty("options.codebrowser.use_jcode", true)){
-        ctagsEncoding = "";
-      } else if (upperEncoding.indexOf("UTF-8") >= 0){
-        ctagsEncoding = "utf8";
-      } else if (
-        upperEncoding.indexOf("MS932") >= 0 
-        || upperEncoding.indexOf("SJIS") >= 0
-        || upperEncoding.indexOf("SHIFT_JIS") >= 0
-        || upperEncoding.indexOf("WINDOWS-31J") >= 0)
-      {
-        ctagsEncoding = "sjis";
-      } else if (upperEncoding.indexOf("EUC") >= 0){
-        ctagsEncoding = "euc";
-      } else {
-        ctagsEncoding = "";
-      }
+      String ctagsEncoding = encoding;
       
       if (upperEncoding.indexOf("NATIVE2ASCII") == 0){
-        encoding = "ISO-8859-1";
-      } else if (upperEncoding.indexOf("UTF-8") >= 0){
-        // UTF-8YもUTF-8として処理する
-        encoding = "UTF-8";
+        ctagsEncoding = "ISO-8859-1";
+      }
+      
+      if (jEdit.getBooleanProperty("options.codebrowser.use_jcode", true)) {
+        // String[] newArgs = new String[args.length + 1];
+        // System.arraycopy(args, 0, newArgs,0, 1);
+        // newArgs[1] = "--jcode="+ctagsEncoding;
+        // System.arraycopy(args, 1, newArgs,2, args.length - 1);
+        // args = newArgs;
+        // argsList.add(1, "--jcode="+ctagsEncoding);
+        cmdLine.add("--input-encoding="+ctagsEncoding);
+        cmdLine.add("--output-encoding="+ctagsEncoding);
       }
       
       // System.out.println(encoding);
@@ -116,51 +113,26 @@ public class CBRoot implements TreeNode
       // System.out.println(ctagsEncoding);
       
       String ctagsLang = getCtagsLang(lang, fileName);
-      
-      String[] args;
-      
-      if(!buildxml)
-      {
-        args=new String[]{
-          jEdit.getProperty("options.codebrowser.ctags_path"),
-          "--fields=KsSz",
-          "--excmd=pattern",
-          "--sort=no",
-          "-f",
-          "-",
-          path
-        };
-      }
-      else
-      {
-        args=new String[]{
-          jEdit.getProperty("options.codebrowser.ctags_path"),
-          "--fields=KsSz",
-          "--excmd=pattern",
-          "--sort=no",
-          "--language-force=ant",
-          "-f",
-          "-",
-          path
-        };
-        lang="ant";
-      }
-      // funa edit
-      if (!ctagsEncoding.equals("")){
-        String[] newArgs = new String[args.length + 1];
-        System.arraycopy(args, 0, newArgs,0, 1);
-        newArgs[1] = "--jcode="+ctagsEncoding;
-        System.arraycopy(args, 1, newArgs,2, args.length - 1);
-        args = newArgs;
+      if (buildxml) {
+        cmdLine.add("--language-force=ant");
+        lang="ant"; 
+      } else if (!"".equals(ctagsLang)){
+        // String[] newArgs = new String[args.length + 1];
+        // System.arraycopy(args, 0, newArgs,0, 1);
+        // newArgs[1] = "--language-force="+ctagsLang;
+        // System.arraycopy(args, 1, newArgs,2, args.length - 1);
+        // args = newArgs;
+        cmdLine.add("--language-force="+ctagsLang);
       }
       
-      if (!ctagsLang.equals("")){
-        String[] newArgs = new String[args.length + 1];
-        System.arraycopy(args, 0, newArgs,0, 1);
-        newArgs[1] = "--language-force="+ctagsLang;
-        System.arraycopy(args, 1, newArgs,2, args.length - 1);
-        args = newArgs;
-      }
+      cmdLine.add("--fields=KsSz");
+      cmdLine.add("--excmd=pattern");
+      cmdLine.add("--sort=no");
+      cmdLine.add("-f");
+      cmdLine.add("-");
+      cmdLine.add(path);
+      ??
+      String[] args = cmdLine.toArray(new String[0]);
       
       /*
       System.err.println("Args: ");
@@ -170,7 +142,7 @@ public class CBRoot implements TreeNode
       }
       */
       Process p=Runtime.getRuntime().exec(args);
-      BufferedReader in=new BufferedReader(new InputStreamReader(p.getInputStream(), encoding));
+      BufferedReader in=new BufferedReader(new InputStreamReader(p.getInputStream(), ctagsEncoding));
       //System.err.println("ctags started!");
       
       String line;
