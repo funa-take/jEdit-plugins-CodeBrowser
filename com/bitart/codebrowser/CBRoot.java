@@ -77,10 +77,6 @@ public class CBRoot implements TreeNode
 		Hashtable cbTypes=new Hashtable();
 		Vector tv=new Vector();
 		
-		boolean buildxml=false;
-		
-		if(path.toLowerCase().endsWith("build.xml")) buildxml=true;
-		
 		try
 		{
 			//System.err.println("Starting ctags...");
@@ -113,10 +109,7 @@ public class CBRoot implements TreeNode
       // System.out.println(ctagsEncoding);
       
       String ctagsLang = getCtagsLang(lang, fileName);
-      if (buildxml) {
-        cmdLine.add("--language-force=ant");
-        lang="ant"; 
-      } else if (!"".equals(ctagsLang)){
+      if (!"".equals(ctagsLang)){
         // String[] newArgs = new String[args.length + 1];
         // System.arraycopy(args, 0, newArgs,0, 1);
         // newArgs[1] = "--language-force="+ctagsLang;
@@ -131,7 +124,7 @@ public class CBRoot implements TreeNode
       cmdLine.add("-f");
       cmdLine.add("-");
       cmdLine.add(path);
-      ??
+      
       String[] args = cmdLine.toArray(new String[0]);
       
       /*
